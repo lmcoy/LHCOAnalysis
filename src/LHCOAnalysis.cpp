@@ -91,8 +91,9 @@ bool ApplyCuts( Event & event, unsigned long jet_multiplicity ) {
 
 
 int main(int argc, char* argv[]) {
-	if( argc != 3 ) {
+	if( argc != 3 && argc != 2 ) {
 		std::cerr << "usage of " << argv[0] << ":\n    " << argv[0] << " jet_multiplicity(int) file.lhco\n";
+		std::cerr << "    cat file.lhco | " << argv[0] << " jet_multiplicity(int)\n";
 		return EXIT_FAILURE;
 	}
 
@@ -109,14 +110,20 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	std::vector<Event> events = LoadEventsFromFile(argv[2]);
+	std::vector<Event> events;
+	if( argc == 3 ) {
+		events = LoadEventsFromFile(argv[2]);
 
-	if( events.size() == 0 ) {
-		std::cerr << "no events read from " << argv[2] << ". Does it exist?\n";
-		return EXIT_FAILURE;
+		if( events.size() == 0 ) {
+			std::cerr << "no events read from " << argv[2] << ". Does it exist?\n";
+			return EXIT_FAILURE;
+		}
+		std::cout << events.size() << " events read from " << argv[2] << "\n";
+	} else {
+		events = LoadEventsFromStream( std::cin );
+		std::cout << events.size() << " events read from stdin\n";
 	}
 
-	std::cout << events.size() << " events read from " << argv[2] << "\n";
 
 	unsigned long passed = 0;
 	for( auto it = events.begin(); it != events.end(); ++it ) {
