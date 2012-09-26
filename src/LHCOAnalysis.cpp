@@ -13,12 +13,16 @@
 #include <vector>
 #include <algorithm>
 
+extern "C" {
+#include <getopt.h>
+}
+
 #include "src/lhco/Event.h"
 
 
 bool sortPT(const Object & obj1, const Object & obj2 ) { return (obj1.PT>obj2.PT); }
 
-bool ApplyCuts( Event & event, unsigned long jet_multiplicity ) {
+bool ApplyCuts( Event & event, unsigned long jet_multiplicity, double min_MET, double min_HT ) {
 	std::sort(event.Jets.begin(), event.Jets.end(), sortPT );
 	if( event.Jets.size() < jet_multiplicity ) {
 		return false;
@@ -86,39 +90,137 @@ bool ApplyCuts( Event & event, unsigned long jet_multiplicity ) {
 	if( event.MET.PT / Meff < METvsMeff ) {
 		return false;
 	}
+
+	if( event.MET.PT < min_MET ) {
+		return false;
+	}
+
+	double HT = 0.0;
+	for( auto jet = event.Jets.begin(); jet != event.Jets.end(); ++jet ) {
+		HT += jet->FourMomentum().ET();
+	}
+
+	if( HT < min_HT ) {
+		return false;
+	}
+
+
 	return true;
+}
+
+void print_usage(void) {
+	std::cout << "Usage:\n";
+	std::cout << "    LHCOAnalysis --jet_mult 3 --min_ht 100 --min_met 50 file.lhco\n";
+	std::cout << "        (reads events from file)\n";
+	std::cout << "  or\n";
+	std::cout << "    LHCOAnalysis --jet_mult 3 --min_ht 100 --min_met 50\n";
+	std::cout << "        (reads events from stdin)\n";
+	std::cout << "Options:\n";
+	std::cout.width(20);
+	std::cout << std::left << "  --jet_mult" << "jet multiplicity. Event must have at least jet_mult (>= 2) jets to pass cuts.\n";
+	std::cout.width(20);
+	std::cout << std::left << "  --min_ht" << "H_T cut. Only events with H_T > min_ht (in GeV) pass cuts.\n";
+	std::cout.width(20);
+	std::cout << std::left << "  --min_met" << "MET cut. Only events with MET > min_met (in GeV) pass cuts.\n";
 }
 
 
 int main(int argc, char* argv[]) {
-	if( argc != 3 && argc != 2 ) {
-		std::cerr << "usage of " << argv[0] << ":\n    " << argv[0] << " jet_multiplicity(int) file.lhco\n";
-		std::cerr << "    cat file.lhco | " << argv[0] << " jet_multiplicity(int)\n";
-		return EXIT_FAILURE;
-	}
 
 
-	bool ok = false;
-	std::string mult(argv[1]);
-	long jet_multiplicity = ParseLong(mult,&ok);
-	if( !ok ) {
-		std::cerr << "jet multiplicity must be an integer but got \""<<mult<<"\".\n";
-		return EXIT_FAILURE;
+	// define possible cmd line options
+	static struct option long_options[] = {
+		{"jet_mult", required_argument, 0, 'j'},
+		{"min_met", required_argument, 0, 'e'},
+		{"min_ht", required_argument, 0, 'm'},
+		{"help", no_argument, 0, 'h'},
+		{0, 0, 0, 0}
+	};
+	int option_index = 0;
+	int c;
+	char *jopt = 0;
+	char *eopt = 0;
+	char *mopt = 0;
+
+	// parse cmd line options
+	while (( c = getopt_long_only(argc, argv,"hj:e:m:", long_options, &option_index )) != -1 ) {
+		switch(c) {
+		case 'j':
+			jopt = optarg;
+			break;
+		case 'e':
+			eopt = optarg;
+			break;
+		case 'm':
+			mopt = optarg;
+			break;
+		case 'h':
+			print_usage();
+			exit(EXIT_SUCCESS);
+		case '?':
+			break;
+		default:
+			exit(EXIT_FAILURE);
+		}
 	}
-	if( jet_multiplicity <= 1 ) {
-		std::cerr << "jet multiplicity must be greater than 1 but got " << jet_multiplicity << ".\n";
-		return EXIT_FAILURE;
+
+	// Check if all options are set
+	bool failed = false;
+	if( jopt == 0 ) {
+		std::cerr << "error: jet multiplicity is missing.\n    You have to use the --jet_mult int (>=2) option.\n";
+		failed = true;
 	}
+	if( mopt == 0 ) {
+		std::cerr << "error: min H_T cut is missing.\n    Use --min_ht float (>=0.0) option.\n";
+		failed = true;
+	}	   
+	if( eopt == 0 ) {
+		std::cerr << "error: min MET cut is missing.\n    Use --min_met float (>=0.0) option.\n";
+		failed = true;
+	}
+	if( failed ) {
+		exit(EXIT_FAILURE);
+	}
+
+	// use cmd line options
+	bool ok = true;
+	double min_HT = ParseDouble(mopt, &ok);
+	if( !ok || min_HT < 0.0 ) {
+		std::cerr << "error: --min_ht expects a float (>= 0.0).\n";
+		failed = true;
+	}
+	double min_MET = ParseDouble(eopt, &ok);
+	if( !ok || min_MET < 0.0 ) {
+		std::cerr << "error: --min_met expects a float (>= 0.0).\n";
+		failed = true;
+	}
+	int jet_multiplicity = ParseLong(jopt, &ok);
+	if( !ok || jet_multiplicity < 2 ) {
+		std::cerr << "error: --jet_mult expects a int (>= 2).\n";
+		failed = true;
+	}
+	if( failed ) {
+		exit(EXIT_FAILURE);
+	}
+
+	std::cout << "--min_ht =   " << min_HT << "\n";
+	std::cout << "--min_met =  " << min_MET << "\n";
+	std::cout << "--jet_mult = " << jet_multiplicity << "\n";
+
 
 	std::vector<Event> events;
-	if( argc == 3 ) {
-		events = LoadEventsFromFile(argv[2]);
+	if(optind < argc) {
+		if(optind+1 != argc) {
+			std::cerr << "warning: only one file is supported. ignoring all other files...\n";
+		}
+		std::cout << "file: " << argv[optind] << "\n";
+		events = LoadEventsFromFile(argv[optind]);
 
 		if( events.size() == 0 ) {
-			std::cerr << "no events read from " << argv[2] << ". Does it exist?\n";
-			return EXIT_FAILURE;
+			std::cerr << "error: no events read from " << argv[optind] << ". Does it exist?\n";
+			exit(EXIT_FAILURE);
 		}
-		std::cout << events.size() << " events read from " << argv[2] << "\n";
+		std::cout << events.size() << " events read from " << argv[optind] << "\n";
 	} else {
 		events = LoadEventsFromStream( std::cin );
 		std::cout << events.size() << " events read from stdin\n";
@@ -127,7 +229,7 @@ int main(int argc, char* argv[]) {
 
 	unsigned long passed = 0;
 	for( auto it = events.begin(); it != events.end(); ++it ) {
-		if( ApplyCuts(*it, jet_multiplicity ) ) {
+		if( ApplyCuts(*it, jet_multiplicity, min_MET, min_HT ) ) {
 			passed += 1;
 		}
 	}
