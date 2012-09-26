@@ -45,21 +45,20 @@ strings Fields(std::string & s) {
 	return FieldsFunc(s, isspace);
 }
 
-double ParseDouble(std::string& s, bool * ok) {
+double ParseDouble(const char * s, bool * ok) {
 	if (ok) {
 		*ok = true;
 	}
 	char *endptr = 0;
-	const char *cstring = s.c_str();
 	errno = 0;
-	double d = strtod(cstring, &endptr);
+	double d = strtod(s, &endptr);
 	if (errno == ERANGE) {
 		fprintf(stderr, "range error\n");
 		if (ok) {
 			*ok = false;
 		}
 	}
-	if (endptr == cstring) {
+	if (endptr == s) {
 		fprintf(stderr, "no digits were found\n");
 		if (ok) {
 			*ok = false;
@@ -75,21 +74,24 @@ double ParseDouble(std::string& s, bool * ok) {
 	return d;
 }
 
-long ParseLong(std::string& s, bool * ok) {
+double ParseDouble(std::string s, bool * ok) {
+	return ParseDouble(s.c_str(),ok);
+}
+
+long ParseLong(const char * s, bool * ok) {
 	if (ok) {
 		*ok = true;
 	}
 	char *endptr = 0;
-	const char *cstring = s.c_str();
 	errno = 0;
-	long l = strtol(cstring, &endptr, 10);
+	long l = strtol(s, &endptr, 10);
 	if (errno == ERANGE) {
 		fprintf(stderr, "range error\n");
 		if (ok) {
 			*ok = false;
 		}
 	}
-	if (endptr == cstring) {
+	if (endptr == s) {
 		fprintf(stderr, "no digits were found\n");
 		if (ok) {
 			*ok = false;
@@ -104,3 +106,8 @@ long ParseLong(std::string& s, bool * ok) {
 	}
 	return l;
 }
+
+long ParseLong(std::string s, bool * ok) {
+	return ParseLong(s.c_str(),ok);
+}
+
