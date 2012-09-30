@@ -16,7 +16,10 @@
 
 typedef std::vector<std::string> strings;
 
+/// FieldsFunc splits the string s at each occurrence of one or more character for which f(c) returns true.
 strings FieldsFunc( std::string & s, int (*f)(int) );
+
+/// Fields splits the string s at each occurrence of one or more white space.
 strings Fields( std::string & s );
 
 /// ParseDouble converts the string s to an double.
