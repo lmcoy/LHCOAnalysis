@@ -49,7 +49,7 @@ double FourVector::Phi() const {
 }
 
 double FourVector::Eta() const {
-	return log(tan(Theta()/2.0));
+	return -log(tan(Theta()/2.0));
 }
 
 double FourVector::MomentumAbs() const {
