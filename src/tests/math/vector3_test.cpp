@@ -29,6 +29,17 @@ TEST(Vector3,DeltaR) {
 	EXPECT_EQ(Vector3::DeltaR(a,b), PI/2.0 );
 }
 
+TEST(Vector3, PseudoRapidity) {
+	Vector3 a(1.0, 0.0, 0.0);
+	EXPECT_NEAR(a.PseudoRapidity(), 0.0, 1e-09);
+
+	Vector3 b(0.0, 1.0, 1.0);
+	EXPECT_NEAR(b.PseudoRapidity(), 8.81373587019542826e-01, 1e-09);
+
+	Vector3 c(0.0, -1.0, -1.0);
+	EXPECT_NEAR(c.PseudoRapidity(), -8.81373587019542826e-01, 1e-09);
+}
+
 int main(int argc, char* argv[]) {
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
