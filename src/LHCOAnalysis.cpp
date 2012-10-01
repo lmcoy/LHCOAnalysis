@@ -235,6 +235,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	std::cout << passed << " events pass the cuts\n";
+	std::cout << "efficiency: " << (double)passed/(double)events.size() << "\n";
 
 	return EXIT_SUCCESS;
 }
