@@ -37,7 +37,7 @@ double Vector3::DeltaPhi( const Vector3 & a, const Vector3 & b ) {
 	}
 	return dphi;
 }
-double DeltaR( const Vector3 & a, const Vector3 & b ) {
+double Vector3::DeltaR( const Vector3 & a, const Vector3 & b ) {
 	double eta1 = a.PseudoRapidity();
 	double eta2 = b.PseudoRapidity();
 	double deta = eta1 - eta2;
