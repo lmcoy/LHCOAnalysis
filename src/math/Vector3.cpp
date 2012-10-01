@@ -21,7 +21,7 @@ double Vector3::Dot(const Vector3 & v) const {
 double Vector3::PseudoRapidity() const {
 	double tmp = sqrt( data[0]*data[0] + data[1]*data[1] );
 	double theta = atan2(tmp,data[2]);
-	return log(tan(theta/2.0));
+	return -log(tan(theta/2.0));
 }
 
 double Vector3::DeltaPhi( const Vector3 & a, const Vector3 & b ) {
