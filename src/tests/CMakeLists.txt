@@ -22,6 +22,10 @@ ExternalProject_ADD(
 ExternalProject_Get_Property(googletest source_dir)
 INCLUDE_DIRECTORIES(${source_dir}/include)
 
+
+#  -------------
+# | Vector3Test |
+#  -------------
 add_executable(Vector3Test ${PROJECT_SOURCE_DIR}/src/tests/math/vector3_test.cpp)
 add_dependencies(Vector3Test googletest)
 
@@ -34,4 +38,22 @@ target_link_libraries(Vector3Test
 	pthread)
 
 add_test(Vector3Test Vector3Test)
+
+
+#  ----------------
+# | FourVectorTest |
+#  ----------------
+add_executable(FourVectorTest ${PROJECT_SOURCE_DIR}/src/tests/math/fourvector_test.cpp)
+add_dependencies(FourVectorTest googletest)
+
+ExternalProject_Get_Property(googletest binary_dir)
+
+target_link_libraries(FourVectorTest
+    ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest.a
+	${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main.a
+	math
+	pthread)
+
+add_test(FourVectorTest FourVectorTest)
+
 
