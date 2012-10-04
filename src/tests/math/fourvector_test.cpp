@@ -68,7 +68,7 @@ TEST(FourVector, SetFromMassPtEtaPhi) {
 
 	FourVector b;
 	b.SetFromMassPtEtaPhi( 4.0, 12.0, 1.0, 0.5*PI );
-	EXPECT_EQ( b[1], 7.34788079488411875e-16 );
+	EXPECT_NEAR( b[1], 7.34788079488411875e-16, 1.0e-9 );
 	EXPECT_EQ( b[2], 12.0 );
 	EXPECT_EQ( b[3], 1.41024143237256165e+01 );
 	EXPECT_EQ( b[0], 1.89440779600914198e+01 );
