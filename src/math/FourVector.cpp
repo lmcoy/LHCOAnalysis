@@ -34,10 +34,12 @@ void FourVector::SetFromMomentumAndMass(double m, double p1, double p2, double p
 }
 
 void FourVector::SetFromMassPtEtaPhi(double m, double pT, double eta, double phi) {
+	pT = fabs(pT);
 	SetFromMomentumAndMass(m, pT * cos(phi), pT * sin(phi), pT * sinh(eta));
 }
 
 void FourVector::SetFromEnergyPtEtaPhi(double e, double pT, double eta, double phi) {
+	pT = fabs(pT);
 	data[0] = e;
 	data[1] = pT * cos(phi);
 	data[2] = pT * sin(phi);
